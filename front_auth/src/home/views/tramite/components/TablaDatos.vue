@@ -1,70 +1,65 @@
-<script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { CustomerService } from '@/home/views/tramite/service/CustomerService';
-import { FilterMatchMode } from '@primevue/core/api'; // Ya no se necesita FilterOperator
-import Button from 'primevue/button'
+<script setup>
+import { ref } from 'vue';
+import { FilterMatchMode } from '@primevue/core/api';
+import Button from 'primevue/button';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import InputText from 'primevue/inputtext';
 import Column from 'primevue/column';
 import DataTable from 'primevue/datatable';
 
-
-const customers = ref();
-const filters = ref();
-const loading = ref(true);
-
-onMounted(() => {
-  CustomerService.getCustomersMedium().then((data) => {
-    customers.value = getCustomers(data);
-    loading.value = false;
-  });
+// Define las propiedades que el componente espera recibir
+const props = defineProps({
+  customers: {
+    type: Array,
+    required: true
+  },
+  loading: {
+    type: Boolean,
+    default: false
+  }
 });
 
-// 1. FUNCIÓN DE FILTROS SIMPLIFICADA
+// --- CORRECCIÓN 1: Declarar 'filters' como una referencia reactiva ---
+const filters = ref();
+
+// Función para inicializar o reiniciar los filtros
 const initFilters = () => {
   filters.value = {
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   };
 };
 
-initFilters(); // Llama a la nueva función simplificada
+// Llama a la función para establecer el estado inicial del filtro
+initFilters();
 
-const formatDate = (value: any) => {
-  return new Date(value).toLocaleDateString('es-ES', { // Cambiado a 'es-ES' como ejemplo
+// Función para limpiar el filtro (ahora simplemente reinicia)
+const clearFilter = () => {
+  initFilters();
+};
+
+// Función para dar formato a la fecha
+const formatDate = (value) => {
+  if (!value) return '';
+  return new Date(value).toLocaleDateString('es-ES', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric'
   });
 };
-const formatCurrency = (value: any) => {
-  return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-};
-
-// Esta función ahora solo reinicia el filtro global
-const clearFilter = () => {
-  initFilters();
-};
-
-const getCustomers = (data: any) => {
-  return [...(data || [])].map((d) => {
-    d.date = new Date(d.date);
-    return d;
-  });
-};
-
 </script>
 
 <template>
-  <DataTable v-model:filters="filters" :value="customers" paginator showGridlines :rows="10" dataKey="id"
-    :loading="loading" :globalFilterFields="['name', 'country.name', 'representative.name', 'status']" :pt="{
+  <DataTable v-model:filters="filters" :value="props.customers" paginator showGridlines :rows="10" dataKey="CU"
+    :loading="props.loading" :globalFilterFields="['CU', 'asunto', 'estado', 'documento.fecha_emision']" :pt="{
       column: {
-        headercell: { style: 'font-size: 10px' },
+        headercell: { style: 'font-size: 12px; font-weight: bold;' },
         bodycell: { style: 'font-size: 15px' }
       }
     }">
+
     <template #header>
-      <div class="flex justify-between">
+      <div class="flex justify-between items-center">
         <Button type="button" icon="pi pi-filter-slash" label="Limpiar" outlined @click="clearFilter()" />
         <IconField>
           <InputIcon>
@@ -74,69 +69,29 @@ const getCustomers = (data: any) => {
         </IconField>
       </div>
     </template>
-    <template #empty> No se encontro lo que buscaba.</template>
-    <template #loading> Cargando datos. Por favor espere. </template>
 
-    <Column field="name" header="Codigo Unico" style="min-width: 8rem">
+    <template #empty> No se encontraron resultados. </template>
+    <template #loading> Cargando datos, por favor espere... </template>
+
+    <Column field="CU" header="Código Único" sortable style="min-width: 12rem"></Column>
+    <Column field="asunto" header="Asunto" sortable style="min-width: 16rem"></Column>
+    <Column field="estado" header="Estado" sortable style="min-width: 8rem"></Column>
+
+    <Column field="documento.fecha_emision" header="Fecha de Emisión" sortable style="min-width: 10rem">
       <template #body="{ data }">
-        {{ data.name }}
+        {{ formatDate(data.documento.fecha_emision) }}
       </template>
     </Column>
 
-    <Column field="country.name" header="Opciones" style="min-width: 8rem">
+    <Column field="folios" header="N° Folios" sortable style="min-width: 5rem"></Column>
+    <Column field="destino" header="Destino" sortable style="min-width: 8rem"></Column>
+    <Column field="estado_destino" header="Estado Destino" sortable style="min-width: 8rem"></Column>
+
+    <Column header="PDF" style="min-width: 5rem; text-align: center;">
       <template #body="{ data }">
-        <div class="flex items-center gap-2">
-          <img alt="flag" src="https://primefaces.org/cdn/primevue/images/flag/flag_placeholder.png"
-            :class="`flag flag-${data.country.code}`" style="width: 24px" />
-          <span>{{ data.country.name }}</span>
-        </div>
+        <Button icon="pi pi-file-pdf" class="p-button-danger" text @click="verPdf(data.pdf_url)" />
       </template>
     </Column>
-
-    <Column field="representative.name" header="N° Documento" style="min-width: 3rem">
-      <template #body="{ data }">
-        <div class="flex items-center gap-2">
-          <img :alt="data.representative.name"
-            :src="`https://primefaces.org/cdn/primevue/images/avatar/${data.representative.image}`"
-            style="width: 32px" />
-          <span>{{ data.representative.name }}</span>
-        </div>
-      </template>
-    </Column>
-
-    <Column field="date" header="Fecha" style="min-width: 5rem">
-      <template #body="{ data }">
-        {{ formatDate(data.date) }}
-      </template>
-    </Column>
-
-    <Column field="balance" header="Documento" dataType="numeric" style="min-width:7rem">
-      <template #body="{ data }">
-        {{ formatCurrency(data.balance) }}
-      </template>
-    </Column>
-
-    <Column field="status" header="Asunto" style="min-width: 6rem">
-      <template #body="{ data }">
-        {{ data.status }}
-      </template>
-    </Column>
-
-    <Column field="activity" header="Nro Folios" style="min-width: 3rem">
-      <template #body="{ data }">
-        {{ data.activity }}
-      </template>
-    </Column>
-
-    <Column field="verified" header="Destino" dataType="boolean" bodyClass="text-center" style="min-width: 5rem">
-      <template #body="{ data }">
-        <i class="pi"
-          :class="{ 'pi-check-circle text-green-500': data.verified, 'pi-times-circle text-red-400': !data.verified }"></i>
-      </template>
-    </Column>
-
-    <Column field="EstadoDestino" header="Estado Destino" style="min-width: 3rem"></Column>
-    <Column field="pdf" header="PDF"></Column>
 
   </DataTable>
 </template>

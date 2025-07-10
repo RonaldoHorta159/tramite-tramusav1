@@ -14,7 +14,21 @@ class SeguimientoController extends Controller
      */
     public function index()
     {
-        //
+            // Obtenemos al usuario autenticado
+    $user = auth()->user();
+
+    // Buscamos los documentos que pertenecen al DNI del usuario
+    $documentos_ids = Documento::where('dni', $user->dni)->pluck('id');
+
+    // Obtenemos los seguimientos asociados a esos documentos
+    // Usamos with() para cargar las relaciones y evitar consultas N+1 (más eficiente)
+    $seguimientos = Seguimiento::whereIn('documentos_id', $documentos_ids)
+                                ->with(['documento', 'oficinaOrigen', 'oficinaDestino'])
+                                ->orderBy('created_at', 'desc') // Ordenamos por más reciente
+                                ->get();
+
+    // Devolvemos la lista en formato JSON
+    return response()->json($seguimientos);
     }
 
     /**
