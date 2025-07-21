@@ -47,6 +47,15 @@ const formatDate = (value) => {
     year: 'numeric'
   });
 };
+
+const verPdf = (pdfUrl) => {
+  if (pdfUrl) {
+    window.open(pdfUrl, '_blank');
+  } else {
+    // Aquí podrías usar tu toast para notificar que no hay PDF
+    console.warn('Este trámite no tiene un PDF adjunto.');
+  }
+};
 </script>
 
 <template>
@@ -83,8 +92,8 @@ const formatDate = (value) => {
       </template>
     </Column>
 
-    <Column field="folios" header="N° Folios" sortable style="min-width: 5rem"></Column>
-    <Column field="destino" header="Destino" sortable style="min-width: 8rem"></Column>
+    <Column field="documento.numero_folios" header="N° Folios" sortable style="min-width: 5rem"></Column>
+    <Column field="oficinaDestino.name" header="Destino" sortable style="min-width: 8rem"></Column>
     <Column field="estado_destino" header="Estado Destino" sortable style="min-width: 8rem"></Column>
 
     <Column header="PDF" style="min-width: 5rem; text-align: center;">

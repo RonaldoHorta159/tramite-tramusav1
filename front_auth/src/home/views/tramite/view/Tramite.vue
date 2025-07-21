@@ -17,23 +17,31 @@
 import ModalDialog from "../components/ModalDialog.vue";
 import { ref, onMounted } from 'vue';
 import TablaDatos from '../components/TablaDatos.vue';
-import backendApi from '@/services/backendApi'; // <-- 1. Importamos nuestra API
+import backendApi from '@/services/backendApi';
+import { useToast } from 'primevue/usetoast';// <-- 1. Importamos nuestra API
 
 // 2. Creamos una referencia para guardar los datos reales
 const tramites = ref([]);
 const loading = ref(true);
+const toast = useToast(); // <--- Añade esto
+
 
 // 3. Usamos onMounted para ejecutar el código cuando el componente se monta
 onMounted(async () => {
   try {
-    // Hacemos la llamada GET a nuestro endpoint de Laravel
     const response = await backendApi.get('/v1/auth/seguimientos');
-    tramites.value = response.data; // Guardamos los datos en nuestra referencia
+    tramites.value = response.data;
   } catch (error) {
     console.error("Error al cargar los trámites:", error);
-    // Aquí podrías mostrar una notificación de error al usuario
+    // ✅ ¡Añade esto para notificar al usuario!
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'No se pudieron cargar los datos de los trámites. Por favor, inténtalo de nuevo más tarde.',
+      life: 5000
+    });
   } finally {
-    loading.value = false; // Dejamos de mostrar el estado de carga
+    loading.value = false;
   }
 });
 </script>
