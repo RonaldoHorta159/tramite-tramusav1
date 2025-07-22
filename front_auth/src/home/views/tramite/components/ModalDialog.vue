@@ -1,5 +1,5 @@
-<script setup lang="ts">
-import { ref } from "vue";
+<script setup>
+import { ref, defineProps, defineEmits } from 'vue';
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog';
 import Select from 'primevue/select';
@@ -8,19 +8,28 @@ import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
 import FileUpload from 'primevue/fileupload';
 
-const visible = ref(false);
-const selectedCountry = ref();
-const src = ref(null);
-const fileupload = ref();
 
+// --- 1. Define las props y los emits ---
+const props = defineProps({
+  visible: {
+    type: Boolean,
+    default: false,
+  },
+});
+const emit = defineEmits(['update:visible', 'tramite-creado']);
+
+// --- 2. Función para cerrar el modal ---
+const closeModal = () => {
+  emit('update:visible', false);
+};
 
 </script>
 
 
 
 <template>
-  <Button label="Nuevo" @click="visible = true" />
-  <Dialog v-model:visible="visible" modal header="Emitir documento" :style="{ width: '50rem' }">
+  <Dialog :visible="props.visible" @update:visible="closeModal" modal header="Emitir documento"
+    :style="{ width: '50rem' }">
     <div class="flex items-center gap-4 mb-4 mt-2">
       <FloatLabel variant="on">
         <Select v-model="selectedCountry" filter optionLabel="name" class="w-full  p-3 " :style="{ width: '15rem' }">
@@ -82,10 +91,8 @@ const fileupload = ref();
         chooseLabel="Seleccionar archivo" />
     </div>
     <div class="flex justify-end gap-2 mt-4">
-      <Button type="button" label="Cancelar" severity="secondary" @click="visible = false" />
-      <Button type="button" label="Enviar" @click="visible = false" />
+      <Button type="button" label="Cancelar" severity="secondary" @click="closeModal" />
+      <Button type="button" label="Enviar" />
     </div>
   </Dialog>
-
-
 </template>
