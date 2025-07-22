@@ -114,6 +114,33 @@ class SeguimientoController extends Controller
         }
     }
 
+
+    /**
+     * Muestra los trámites pendientes de ser recibidos por la oficina del usuario.
+     */
+    public function porRecibir()
+    {
+        // 1. Obtenemos al usuario y su oficina
+        $usuario = auth()->user();
+        $oficinaUsuarioId = $usuario->oficina_id;
+
+        // 2. Validamos si el usuario tiene una oficina asignada
+        if (!$oficinaUsuarioId) {
+            // Si no tiene oficina, no puede recibir nada. Devolvemos una lista vacía.
+            return response()->json([]);
+        }
+
+        // 3. Buscamos los seguimientos dirigidos a su oficina y que están "Enviados"
+        $tramitesPorRecibir = Seguimiento::where('oficinas_destino', $oficinaUsuarioId)
+            ->where('estado', 'Enviado') // Asumimos que 'Enviado' es el estado pendiente
+            ->with(['documento', 'oficinaOrigen', 'oficinaDestino']) // Cargamos relaciones para info completa
+            ->orderBy('created_at', 'asc') // Mostramos los más antiguos primero
+            ->get();
+
+        // 4. Devolvemos la lista en formato JSON
+        return response()->json($tramitesPorRecibir);
+    }
+
     /**
      * Display the specified resource.
      */

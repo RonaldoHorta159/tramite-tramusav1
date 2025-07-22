@@ -14,7 +14,7 @@ Route::prefix('v1')->group(function () {
             Route::get('me', [AuthController::class, 'me']);
             Route::post('refresh', [AuthController::class, 'refresh']);
             Route::get('logout', [AuthController::class, 'logout'])->name('logout');
-
+            Route::get('seguimientos/por-recibir', [SeguimientoController::class, 'porRecibir']);
             // Seguimiento de documentos
             Route::resource('seguimientos', SeguimientoController::class);
             Route::resource('oficinas', OficinaController::class); // <-- AÑADE ESTA LÍNEA

@@ -18,4 +18,17 @@ export const seguimientoService = {
       return []
     }
   },
+  /**
+   * Obtiene la lista de trámites pendientes de recibir por la oficina del usuario.
+   */
+  async fetchSeguimientosPorRecibir() {
+    // <-- AÑADE ESTA NUEVA FUNCIÓN
+    try {
+      const response = await backendApi.get('/v1/auth/seguimientos/por-recibir')
+      return response.data
+    } catch (error) {
+      console.error('Error en fetchSeguimientosPorRecibir:', error)
+      return []
+    }
+  },
 }

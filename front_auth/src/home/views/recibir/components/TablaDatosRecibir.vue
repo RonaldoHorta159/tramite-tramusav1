@@ -1,136 +1,98 @@
-<script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { FilterMatchMode } from '@primevue/core/api'; // Ya no se necesita FilterOperator
-import Button from 'primevue/button'
-import IconField from 'primevue/iconfield';
-import InputIcon from 'primevue/inputicon';
-import InputText from 'primevue/inputtext';
-import Column from 'primevue/column';
+<script setup>
+import { defineProps, defineEmits } from 'vue';
 import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Button from 'primevue/button';
 
+const props = defineProps({
+  tramites: {
+    type: Array,
+    required: true,
+  },
+  loading: {
+    type: Boolean,
+    default: false,
+  },
+});
 
-const customers = ref();
-const filters = ref();
-const loading = ref(true);
+const emit = defineEmits(['recibir-tramite', 'observar-tramite', 'rechazar-tramite']);
 
-
-
-// 1. FUNCIÓN DE FILTROS SIMPLIFICADA
-const initFilters = () => {
-  filters.value = {
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-  };
-};
-
-initFilters(); // Llama a la nueva función simplificada
-
-const formatDate = (value: any) => {
-  return new Date(value).toLocaleDateString('es-ES', { // Cambiado a 'es-ES' como ejemplo
+const formatDate = (value) => {
+  if (!value) return '';
+  return new Date(value).toLocaleDateString('es-ES', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric'
   });
 };
-const formatCurrency = (value: any) => {
-  return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+
+const verPdf = (pdfUrl) => {
+  if (pdfUrl) {
+    window.open(`http://localhost:8000${pdfUrl}`, '_blank');
+  }
 };
 
-// Esta función ahora solo reinicia el filtro global
-const clearFilter = () => {
-  initFilters();
-};
-
-const getCustomers = (data: any) => {
-  return [...(data || [])].map((d) => {
-    d.date = new Date(d.date);
-    return d;
-  });
-};
-
+// Funciones que emiten eventos al componente padre
+const recibirTramite = (tramite) => emit('recibir-tramite', tramite);
+const observarTramite = (tramite) => emit('observar-tramite', tramite);
+const rechazarTramite = (tramite) => emit('rechazar-tramite', tramite);
 </script>
 
 <template>
-  <DataTable v-model:filters="filters" :value="customers" paginator showGridlines :rows="10" dataKey="id"
-    :loading="loading" :globalFilterFields="['name', 'country.name', 'representative.name', 'status']" :pt="{
-      column: {
-        headercell: { style: 'font-size: 10px' },
-        bodycell: { style: 'font-size: 15px' }
-      }
-    }">
-    <template #header>
-      <div class="flex justify-between">
-        <Button type="button" icon="pi pi-filter-slash" label="Limpiar" outlined @click="clearFilter()" />
-        <IconField>
-          <InputIcon>
-            <i class="pi pi-search" />
-          </InputIcon>
-          <InputText v-model="filters['global'].value" placeholder="Buscar en la tabla..." />
-        </IconField>
-      </div>
-    </template>
-    <template #empty> No se encontro lo que buscaba.</template>
-    <template #loading> Cargando datos. Por favor espere. </template>
+  <div>
+    <DataTable :value="props.tramites" :loading="props.loading" paginator :rows="10" dataKey="id" showGridlines
+      responsiveLayout="scroll" class="p-datatable-sm">
 
-    <Column field="name" header="Codigo Unico" style="min-width: 8rem">
-      <template #body="{ data }">
-        {{ data.name }}
-      </template>
-    </Column>
+      <template #empty> No hay trámites pendientes por recibir. </template>
+      <template #loading> Cargando trámites, por favor espere... </template>
 
-    <Column field="country.name" header="Opciones" style="min-width: 8rem">
-      <template #body="{ data }">
-        <div class="flex items-center gap-2">
-          <img alt="flag" src="https://primefaces.org/cdn/primevue/images/flag/flag_placeholder.png"
-            :class="`flag flag-${data.country.code}`" style="width: 24px" />
-          <span>{{ data.country.name }}</span>
-        </div>
-      </template>
-    </Column>
+      <Column field="CU" header="Código Único" sortable />
 
-    <Column field="representative.name" header="N° Documento" style="min-width: 3rem">
-      <template #body="{ data }">
-        <div class="flex items-center gap-2">
-          <img :alt="data.representative.name"
-            :src="`https://primefaces.org/cdn/primevue/images/avatar/${data.representative.image}`"
-            style="width: 32px" />
-          <span>{{ data.representative.name }}</span>
-        </div>
-      </template>
-    </Column>
+      <Column field="estado" header="Estado" sortable />
 
-    <Column field="date" header="Fecha" style="min-width: 5rem">
-      <template #body="{ data }">
-        {{ formatDate(data.date) }}
-      </template>
-    </Column>
+      <Column header="Opciones" style="min-width: 10rem; text-align: center;">
+        <template #body="{ data }">
+          <div class="flex gap-2 justify-center">
+            <Button icon="pi pi-inbox" class="p-button-rounded p-button-success" @click="recibirTramite(data)"
+              v-tooltip.top="'Recibir Trámite'" />
+            <Button icon="pi pi-comments" class="p-button-rounded p-button-warning" @click="observarTramite(data)"
+              v-tooltip.top="'Observar'" />
+            <Button icon="pi pi-times-circle" class="p-button-rounded p-button-danger" @click="rechazarTramite(data)"
+              v-tooltip.top="'Rechazar'" />
+          </div>
+        </template>
+      </Column>
 
-    <Column field="balance" header="Documento" dataType="numeric" style="min-width:7rem">
-      <template #body="{ data }">
-        {{ formatCurrency(data.balance) }}
-      </template>
-    </Column>
+      <Column field="numero_libro" header="N° Libro" sortable>
+        <template #body="{ data }">
+          {{ data.numero_libro || 'N/A' }}
+        </template>
+      </Column>
 
-    <Column field="status" header="Asunto" style="min-width: 6rem">
-      <template #body="{ data }">
-        {{ data.status }}
-      </template>
-    </Column>
+      <Column field="documento.fecha_emision" header="Fecha" sortable>
+        <template #body="{ data }">
+          {{ formatDate(data.documento.fecha_emision) }}
+        </template>
+      </Column>
 
-    <Column field="activity" header="Nro Folios" style="min-width: 3rem">
-      <template #body="{ data }">
-        {{ data.activity }}
-      </template>
-    </Column>
+      <Column field="documento.tipo_documento" header="Documento" sortable />
+      <Column field="asunto" header="Asunto" sortable />
+      <Column field="documento.numero_folios" header="Nro Folios" sortable />
+      <Column field="oficinaOrigen.name" header="Origen" sortable />
 
-    <Column field="verified" header="Destino" dataType="boolean" bodyClass="text-center" style="min-width: 5rem">
-      <template #body="{ data }">
-        <i class="pi"
-          :class="{ 'pi-check-circle text-green-500': data.verified, 'pi-times-circle text-red-400': !data.verified }"></i>
-      </template>
-    </Column>
+      <Column header="PDF" style="text-align: center;">
+        <template #body="{ data }">
+          <Button icon="pi pi-file-pdf" class="p-button-danger" text @click="verPdf(data.documento.pdf_url)"
+            :disabled="!data.documento.pdf_url" />
+        </template>
+      </Column>
 
-    <Column field="EstadoDestino" header="Estado Destino" style="min-width: 3rem"></Column>
-    <Column field="pdf" header="PDF"></Column>
+      <Column field="proveido" header="Proveído" sortable>
+        <template #body="{ data }">
+          {{ data.proveido || 'N/A' }}
+        </template>
+      </Column>
 
-  </DataTable>
+    </DataTable>
+  </div>
 </template>

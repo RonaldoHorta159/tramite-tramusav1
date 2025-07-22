@@ -2,14 +2,13 @@
 import { ref } from 'vue';
 import { FilterMatchMode } from '@primevue/core/api';
 import Button from 'primevue/button';
-import Toolbar from 'primevue/toolbar'; // <-- Importa Toolbar
+import Toolbar from 'primevue/toolbar';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import InputText from 'primevue/inputtext';
 import Column from 'primevue/column';
 import DataTable from 'primevue/datatable';
 
-// El emit para comunicarse con el padre es correcto
 const emit = defineEmits(['open-new-modal']);
 
 const props = defineProps({
@@ -23,18 +22,9 @@ const props = defineProps({
   }
 });
 
-const filters = ref();
-
-const initFilters = () => {
-  filters.value = {
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-  };
-};
-initFilters();
-
-const clearFilter = () => {
-  initFilters();
-};
+const filters = ref({
+  global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+});
 
 const formatDate = (value) => {
   if (!value) return '';
@@ -47,43 +37,36 @@ const formatDate = (value) => {
 
 const verPdf = (pdfUrl) => {
   if (pdfUrl) {
-    window.open(pdfUrl, '_blank');
-  } else {
-    console.warn('Este trámite no tiene un PDF adjunto.');
+    window.open(`http://localhost:8000${pdfUrl}`, '_blank');
   }
 };
 
-// La función que emite el evento al padre es correcta
-const openNew = () => {
-  emit('open-new-modal');
-};
+const openNew = () => emit('open-new-modal');
+
+// Funciones placeholder para las acciones
+const verSeguimiento = (tramite) => console.log('Ver Seguimiento:', tramite);
+const derivarTramite = (tramite) => console.log('Derivar:', tramite);
+const anularTramite = (tramite) => console.log('Anular:', tramite);
+
 </script>
 
 <template>
   <div>
     <Toolbar class="mb-4">
       <template #start>
-        <div class="my-2">
-          <Button label="Nuevo Trámite" icon="pi pi-plus" class="p-button-success" @click="openNew" />
-        </div>
+        <Button label="Nuevo Trámite" icon="pi pi-plus" class="p-button-success" @click="openNew" />
       </template>
     </Toolbar>
-    <DataTable v-model:filters="filters" :value="props.customers" paginator showGridlines :rows="10" dataKey="CU"
-      :loading="props.loading" :globalFilterFields="['CU', 'asunto', 'estado', 'documento.fecha_emision']" :pt="{
-        column: {
-          headercell: { style: 'font-size: 12px; font-weight: bold;' },
-          bodycell: { style: 'font-size: 15px' }
-        }
-      }">
+
+    <DataTable :value="props.customers" :loading="props.loading" paginator :rows="10" dataKey="id"
+      v-model:filters="filters" :globalFilterFields="['CU', 'asunto', 'documento.tipo_documento']" showGridlines
+      responsiveLayout="scroll" class="p-datatable-sm">
 
       <template #header>
-        <div class="flex justify-between items-center">
-          <Button type="button" icon="pi pi-filter-slash" label="Limpiar" outlined @click="clearFilter()" />
+        <div class="flex justify-end">
           <IconField>
-            <InputIcon>
-              <i class="pi pi-search" />
-            </InputIcon>
-            <InputText v-model="filters['global'].value" placeholder="Buscar en la tabla..." />
+            <InputIcon><i class="pi pi-search" /></InputIcon>
+            <InputText v-model="filters['global'].value" placeholder="Buscar..." />
           </IconField>
         </div>
       </template>
@@ -91,22 +74,53 @@ const openNew = () => {
       <template #empty> No se encontraron resultados. </template>
       <template #loading> Cargando datos, por favor espere... </template>
 
-      <Column field="CU" header="Código Único" sortable style="min-width: 12rem"></Column>
-      <Column field="asunto" header="Asunto" sortable style="min-width: 16rem"></Column>
-      <Column field="estado" header="Estado" sortable style="min-width: 8rem"></Column>
-      <Column field="documento.fecha_emision" header="Fecha de Emisión" sortable style="min-width: 10rem">
+      <Column field="CU" header="Código Único" sortable />
+
+      <Column header="Opciones" style="min-width: 10rem; text-align: center;">
+        <template #body="{ data }">
+          <div class="flex gap-2 justify-center">
+            <Button icon="pi pi-eye" class="p-button-rounded p-button-info" @click="verSeguimiento(data)"
+              v-tooltip.top="'Ver Seguimiento'" />
+            <Button icon="pi pi-send" class="p-button-rounded p-button-success" @click="derivarTramite(data)"
+              v-tooltip.top="'Derivar'" />
+            <Button icon="pi pi-trash" class="p-button-rounded p-button-danger" @click="anularTramite(data)"
+              v-tooltip.top="'Anular'" />
+          </div>
+        </template>
+      </Column>
+
+      <Column field="documento.numero_documento" header="N° Doc." sortable />
+
+      <Column field="documento.fecha_emision" header="Fecha" sortable>
         <template #body="{ data }">
           {{ formatDate(data.documento.fecha_emision) }}
         </template>
       </Column>
-      <Column field="documento.numero_folios" header="N° Folios" sortable style="min-width: 5rem"></Column>
-      <Column field="oficinaDestino.name" header="Destino" sortable style="min-width: 8rem"></Column>
-      <Column header="PDF" style="min-width: 5rem; text-align: center;">
+
+      <Column field="documento.tipo_documento" header="Documento" sortable />
+      <Column field="asunto" header="Asunto" sortable />
+      <Column field="documento.numero_folios" header="Nro Folios" sortable />
+      <Column field="oficinaDestino.name" header="Destino" sortable />
+
+      <Column field="estado_destino" header="Estado Destino" sortable>
+        <template #body="{ data }">
+          {{ data.estado_destino || 'Pendiente' }}
+        </template>
+      </Column>
+
+      <Column header="PDF" style="text-align: center;">
         <template #body="{ data }">
           <Button icon="pi pi-file-pdf" class="p-button-danger" text @click="verPdf(data.documento.pdf_url)"
             :disabled="!data.documento.pdf_url" />
         </template>
       </Column>
+
+      <Column field="proveido" header="Proveído" sortable>
+        <template #body="{ data }">
+          {{ data.proveido || 'N/A' }}
+        </template>
+      </Column>
+
     </DataTable>
   </div>
 </template>
