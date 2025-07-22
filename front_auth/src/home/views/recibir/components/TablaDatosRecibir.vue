@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { CustomerService } from '@/home/views/tramite/service/CustomerService';
 import { FilterMatchMode } from '@primevue/core/api'; // Ya no se necesita FilterOperator
 import Button from 'primevue/button'
 import IconField from 'primevue/iconfield';
@@ -14,12 +13,7 @@ const customers = ref();
 const filters = ref();
 const loading = ref(true);
 
-onMounted(() => {
-  CustomerService.getCustomersMedium().then((data) => {
-    customers.value = getCustomers(data);
-    loading.value = false;
-  });
-});
+
 
 // 1. FUNCIÓN DE FILTROS SIMPLIFICADA
 const initFilters = () => {
