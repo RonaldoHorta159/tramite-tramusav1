@@ -22,13 +22,20 @@ export const seguimientoService = {
    * Obtiene la lista de trámites pendientes de recibir por la oficina del usuario.
    */
   async fetchSeguimientosPorRecibir() {
-    // <-- AÑADE ESTA NUEVA FUNCIÓN
-    try {
+        try {
       const response = await backendApi.get('/v1/auth/seguimientos/por-recibir')
       return response.data
     } catch (error) {
       console.error('Error en fetchSeguimientosPorRecibir:', error)
       return []
     }
+  },
+  /**
+   * Cambia el estado de un trámite a "Recibido".
+   * @param {number} tramiteId - El ID del seguimiento a recibir.
+   */
+  async recibirTramite(tramiteId) {
+        const response = await backendApi.patch(`/v1/auth/seguimientos/${tramiteId}/recibir`)
+    return response.data
   },
 }

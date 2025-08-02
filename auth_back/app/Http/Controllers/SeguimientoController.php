@@ -172,4 +172,29 @@ class SeguimientoController extends Controller
     {
         //
     }
+
+    /**
+     * Cambia el estado de un trámite a "Recibido".
+     *
+     * @param  \App\Models\Seguimiento  $seguimiento
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function recibir(Seguimiento $seguimiento)
+    {
+        // 1. (Seguridad) Validar que el usuario actual pertenece a la oficina de destino del trámite.
+        $usuario = auth()->user();
+        if ($usuario->oficina_id !== $seguimiento->oficinas_destino) {
+            return response()->json(['message' => 'No autorizado para recibir este trámite.'], 403);
+        }
+
+        // 2. (Lógica) Actualizar el estado del trámite
+        $seguimiento->estado = 'Recibido';
+        $seguimiento->save();
+
+        // 3. (Respuesta) Devolver un mensaje de éxito
+        return response()->json([
+            'message' => 'Trámite ' . $seguimiento->CU . ' recibido con éxito.',
+            'data' => $seguimiento
+        ]);
+    }
 }

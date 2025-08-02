@@ -3,7 +3,8 @@
     <div class="card">
       <ModalDialog :visible="isModalVisible" @update:visible="isModalVisible = $event"
         @tramite-creado="refreshTramites" />
-      <TablaDatos :customers="tramites" :loading="loading" class="mt-5" @open-new-modal="handleOpenModal" />
+      <TablaDatos :customers="tramites" :loading="loading" class="mt-5" @open-new-modal="handleOpenModal"
+        @recibir-tramite="handleRecibirTramite" />
     </div>
   </div>
 </template>
@@ -36,6 +37,24 @@ const refreshTramites = async () => {
     loading.value = false;
   }
 };
+
+// --- 👇 LÓGICA NUEVA 👇 ---
+const handleRecibirTramite = async (tramite) => {
+  try {
+    // Llama al servicio para actualizar el estado en el backend
+    const response = await seguimientoService.recibirTramite(tramite.id);
+
+    // Muestra notificación de éxito
+    toast.add({ severity: 'success', summary: 'Éxito', detail: response.message, life: 3000 });
+
+    // Vuelve a cargar la lista de trámites. El que acabamos de recibir ya no aparecerá.
+    await refreshTramites();
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || 'Ocurrió un error al recibir el trámite.';
+    toast.add({ severity: 'error', summary: 'Error', detail: errorMessage, life: 5000 });
+  }
+};
+// --- 👆 FIN DE LA LÓGICA NUEVA 👆 ---
 
 // Carga inicial de datos
 onMounted(refreshTramites);
