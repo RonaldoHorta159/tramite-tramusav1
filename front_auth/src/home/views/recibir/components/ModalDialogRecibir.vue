@@ -2,7 +2,7 @@
 import { ref } from "vue";
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog';
-import TablaDatosRecibir from "./TablaDatosRecibir.vue";
+import TablaDatosRecibir from "@/home/views/recibir/components/TablaDatosRecibir.vue";
 
 const visible = ref(false);
 const selectedCountry = ref();

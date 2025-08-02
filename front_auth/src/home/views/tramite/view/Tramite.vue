@@ -5,8 +5,11 @@
         @tramite-creado="refreshTramites" />
       <SeguimientoModal :visible="isSeguimientoModalVisible" :documento-id="selectedDocumentoId"
         @close="isSeguimientoModalVisible = false" />
+      <DerivarModal :visible="isDerivarModalVisible" :tramite="tramiteSeleccionado"
+        @close="isDerivarModalVisible = false" @tramite-derivado="refreshTramites" />
       <TablaDatos :customers="tramites" :loading="loading" class="mt-5" @open-new-modal="handleOpenModal"
-        @recibir-tramite="handleRecibirTramite" @ver-seguimiento="handleVerSeguimiento" />
+        @ver-seguimiento="handleVerSeguimiento" @derivar-tramite="handleDerivarTramite"
+        @recibir-tramite="handleRecibirTramite" />
     </div>
   </div>
 </template>
@@ -18,6 +21,7 @@ import TablaDatos from '../components/TablaDatos.vue';
 import ModalDialog from "../components/ModalDialog.vue";
 import { seguimientoService } from '@/services/seguimientoService';
 import { useToast } from 'primevue/usetoast';
+import DerivarModal from '@/components/DerivarModal.vue';
 
 const tramites = ref([]);
 const loading = ref(true);
@@ -25,6 +29,8 @@ const toast = useToast();
 const isModalVisible = ref(false); // <--- 1. Variable para controlar el modal
 const isSeguimientoModalVisible = ref(false);
 const selectedDocumentoId = ref(null);
+const isDerivarModalVisible = ref(false); // <-- 2. Añade una variable para su visibilidad
+const tramiteSeleccionado = ref(null);    // <-- 3. Para guardar el trámite que se va a derivar
 
 // --- 2. Función para abrir el modal ---
 const handleOpenModal = () => {
@@ -63,6 +69,10 @@ const handleRecibirTramite = async (tramite) => {
     const errorMessage = error.response?.data?.message || 'Ocurrió un error al recibir el trámite.';
     toast.add({ severity: 'error', summary: 'Error', detail: errorMessage, life: 5000 });
   }
+};
+const handleDerivarTramite = (tramite) => {
+  tramiteSeleccionado.value = tramite;
+  isDerivarModalVisible.value = true;
 };
 // --- 👆 FIN DE LA LÓGICA NUEVA 👆 ---
 

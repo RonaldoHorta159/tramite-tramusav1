@@ -197,4 +197,66 @@ class SeguimientoController extends Controller
             'data' => $seguimiento
         ]);
     }
+
+    /**
+     * Deriva un trámite a una nueva oficina.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Seguimiento  $seguimiento // El trámite original que se está derivando
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function derivar(Request $request, Seguimiento $seguimiento)
+    {
+        // 1. Validar los datos de entrada
+        $validatedData = $request->validate([
+            'oficinas_destino' => 'required|exists:oficinas,id',
+            'proveido' => 'required|string|max:1000',
+        ]);
+
+        $usuario = auth()->user();
+
+        // 2. (Seguridad) Asegurarse de que el usuario que deriva es el destinatario actual del trámite
+        if ($usuario->oficina_id !== $seguimiento->oficinas_destino) {
+            return response()->json(['message' => 'No tiene permiso para derivar este trámite.'], 403);
+        }
+
+        try {
+            // 3. Usamos una transacción para asegurar la integridad de los datos
+            $nuevoSeguimiento = DB::transaction(function () use ($validatedData, $seguimiento, $usuario) {
+                // --- Paso A: Actualizar el trámite antiguo ---
+                $seguimiento->estado = 'Derivado';
+                $seguimiento->save();
+
+                // --- Paso B: Crear el nuevo registro de seguimiento ---
+                $derivacion = new Seguimiento();
+                $derivacion->documentos_id = $seguimiento->documentos_id; // Mismo documento
+                $derivacion->asunto = $seguimiento->asunto; // Mismo asunto
+                $derivacion->fecha_seguimiento = now();
+                $derivacion->estado = 'Enviado'; // El nuevo estado es "Enviado" para la oficina de destino
+                $derivacion->oficinas_origen = $usuario->oficina_id; // El origen es la oficina del usuario actual
+                $derivacion->oficinas_destino = $validatedData['oficinas_destino'];
+                $derivacion->proveido = $validatedData['proveido']; // El "Pase a:"
+                $derivacion->save(); // Guardamos para obtener el ID
+
+                // --- Paso C: Generar el nuevo Código Único (CU) ---
+                $cu_number = str_pad($derivacion->id, 7, '0', STR_PAD_LEFT);
+                $cu_code = "CU-" . $derivacion->oficinas_origen . "-" . $cu_number;
+                $derivacion->CU = $cu_code;
+                $derivacion->save();
+
+                return $derivacion;
+            });
+
+            return response()->json([
+                'message' => 'Trámite derivado con éxito al CU: ' . $nuevoSeguimiento->CU,
+                'data' => $nuevoSeguimiento
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al derivar el trámite.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

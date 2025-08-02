@@ -20,6 +20,8 @@ Route::prefix('v1')->group(function () {
             Route::patch('seguimientos/{seguimiento}/recibir', [SeguimientoController::class, 'recibir']);
 
             Route::resource('seguimientos', SeguimientoController::class);
+            Route::post('seguimientos/{seguimiento}/derivar', [SeguimientoController::class, 'derivar']);
+
             Route::resource('oficinas', OficinaController::class); // <-- AÑADE ESTA LÍNEA
             Route::get('documentos/{documento}/historial', [DocumentoController::class, 'historial']);
         });
