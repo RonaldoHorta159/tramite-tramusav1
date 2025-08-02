@@ -2,7 +2,10 @@
   <div class="bg-white p-4 rounded-md border border-gray-200">
     <div class="card">
       <h2 class="text-xl font-semibold mb-4">Bandeja de Entrada: Trámites por Recibir</h2>
-      <TablaDatosRecibir :tramites="tramitesPorRecibir" :loading="loading" class="mt-5" />
+      <ObservarModal :visible="isObservarModalVisible" :tramite="tramiteSeleccionado"
+        @close="isObservarModalVisible = false" @tramite-observado="cargarTramites" />
+      <TablaDatosRecibir :tramites="tramitesPorRecibir" :loading="loading" class="mt-5"
+        @observar-tramite="handleObservarTramite" />
     </div>
   </div>
 </template>
@@ -12,11 +15,20 @@ import { ref, onMounted } from 'vue';
 import TablaDatosRecibir from '../components/TablaDatosRecibir.vue';
 import { seguimientoService } from '@/services/seguimientoService';
 import { useToast } from 'primevue/usetoast';
+import ObservarModal from '@/components/ObservarModal.vue';
 
 // 1. Referencias para los datos y el estado de carga
 const tramitesPorRecibir = ref([]);
 const loading = ref(true);
 const toast = useToast();
+
+const isObservarModalVisible = ref(false);
+const tramiteSeleccionado = ref(null);
+
+const handleObservarTramite = (tramite) => {
+  tramiteSeleccionado.value = tramite;
+  isObservarModalVisible.value = true;
+};
 
 // 2. Función para cargar los datos desde el servicio
 const cargarTramites = async () => {

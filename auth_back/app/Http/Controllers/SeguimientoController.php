@@ -259,4 +259,36 @@ class SeguimientoController extends Controller
             'data' => $seguimiento
         ]);
     }
+
+    /**
+     * Añade una observación (proveído) a un trámite y cambia su estado a "Observado".
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Seguimiento  $seguimiento
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function observar(Request $request, Seguimiento $seguimiento)
+    {
+        // 1. Validar que el campo 'proveido' venga en la petición
+        $validatedData = $request->validate([
+            'proveido' => 'required|string|max:1000',
+        ]);
+
+        // 2. (Seguridad) Validar que el usuario pertenece a la oficina de destino del trámite
+        $usuario = auth()->user();
+        if ($usuario->oficina_id !== $seguimiento->oficinas_destino) {
+            return response()->json(['message' => 'No autorizado para observar este trámite.'], 403);
+        }
+
+        // 3. Actualizar el estado y el proveído
+        $seguimiento->estado = 'Observado';
+        $seguimiento->proveido = $validatedData['proveido'];
+        $seguimiento->save();
+
+        // 4. Devolver un mensaje de éxito
+        return response()->json([
+            'message' => 'Trámite ' . $seguimiento->CU . ' observado con éxito.',
+            'data' => $seguimiento
+        ]);
+    }
 }

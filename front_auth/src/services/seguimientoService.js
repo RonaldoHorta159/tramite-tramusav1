@@ -66,4 +66,9 @@ export const seguimientoService = {
     const response = await backendApi.patch(`/v1/auth/seguimientos/${tramiteId}/anular`)
     return response.data
   },
+
+  async observarTramite(tramiteId, data) {
+    const response = await backendApi.patch(`/v1/auth/seguimientos/${tramiteId}/observar`, data)
+    return response.data
+  },
 }
