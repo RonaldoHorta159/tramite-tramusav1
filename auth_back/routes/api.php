@@ -4,6 +4,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SeguimientoController;
 use App\Http\Controllers\OficinaController;
+use App\Http\Controllers\DocumentoController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -20,6 +21,7 @@ Route::prefix('v1')->group(function () {
 
             Route::resource('seguimientos', SeguimientoController::class);
             Route::resource('oficinas', OficinaController::class); // <-- AÑADE ESTA LÍNEA
+            Route::get('documentos/{documento}/historial', [DocumentoController::class, 'historial']);
         });
 
     });

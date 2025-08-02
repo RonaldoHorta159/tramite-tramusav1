@@ -15,7 +15,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['recibir-tramite', 'observar-tramite', 'rechazar-tramite']);
+const emit = defineEmits(['recibir-tramite', 'observar-tramite', 'rechazar-tramite', 'ver-seguimiento']);
 
 const formatDate = (value) => {
   if (!value) return '';
@@ -36,6 +36,10 @@ const verPdf = (pdfUrl) => {
 const recibirTramite = (tramite) => emit('recibir-tramite', tramite);
 const observarTramite = (tramite) => emit('observar-tramite', tramite);
 const rechazarTramite = (tramite) => emit('rechazar-tramite', tramite);
+// Nueva función para emitir el evento ver-seguimiento
+const verSeguimiento = (tramite) => {
+  emit('ver-seguimiento', tramite);
+};
 </script>
 
 <template>
@@ -59,6 +63,8 @@ const rechazarTramite = (tramite) => emit('rechazar-tramite', tramite);
               v-tooltip.top="'Observar'" />
             <Button icon="pi pi-times-circle" class="p-button-rounded p-button-danger" @click="rechazarTramite(data)"
               v-tooltip.top="'Rechazar'" />
+            <Button icon="pi pi-eye" class="p-button-rounded p-button-info" @click="verSeguimiento(data)"
+              v-tooltip.top="'Ver seguimiento'" />
           </div>
         </template>
       </Column>

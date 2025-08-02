@@ -22,7 +22,7 @@ export const seguimientoService = {
    * Obtiene la lista de trámites pendientes de recibir por la oficina del usuario.
    */
   async fetchSeguimientosPorRecibir() {
-        try {
+    try {
       const response = await backendApi.get('/v1/auth/seguimientos/por-recibir')
       return response.data
     } catch (error) {
@@ -35,7 +35,15 @@ export const seguimientoService = {
    * @param {number} tramiteId - El ID del seguimiento a recibir.
    */
   async recibirTramite(tramiteId) {
-        const response = await backendApi.patch(`/v1/auth/seguimientos/${tramiteId}/recibir`)
+    const response = await backendApi.patch(`/v1/auth/seguimientos/${tramiteId}/recibir`)
+    return response.data
+  },
+  /**
+   * Obtiene el historial completo de un documento.
+   * @param {number} documentoId
+   */
+  async fetchHistorial(documentoId) {
+    const response = await backendApi.get(`/v1/auth/documentos/${documentoId}/historial`)
     return response.data
   },
 }

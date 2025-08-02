@@ -3,13 +3,16 @@
     <div class="card">
       <ModalDialog :visible="isModalVisible" @update:visible="isModalVisible = $event"
         @tramite-creado="refreshTramites" />
+      <SeguimientoModal :visible="isSeguimientoModalVisible" :documento-id="selectedDocumentoId"
+        @close="isSeguimientoModalVisible = false" />
       <TablaDatos :customers="tramites" :loading="loading" class="mt-5" @open-new-modal="handleOpenModal"
-        @recibir-tramite="handleRecibirTramite" />
+        @recibir-tramite="handleRecibirTramite" @ver-seguimiento="handleVerSeguimiento" />
     </div>
   </div>
 </template>
 
 <script setup>
+import SeguimientoModal from '@/components/SeguimientoModal.vue';
 import { ref, onMounted } from 'vue';
 import TablaDatos from '../components/TablaDatos.vue';
 import ModalDialog from "../components/ModalDialog.vue";
@@ -20,6 +23,8 @@ const tramites = ref([]);
 const loading = ref(true);
 const toast = useToast();
 const isModalVisible = ref(false); // <--- 1. Variable para controlar el modal
+const isSeguimientoModalVisible = ref(false);
+const selectedDocumentoId = ref(null);
 
 // --- 2. Función para abrir el modal ---
 const handleOpenModal = () => {
@@ -36,6 +41,11 @@ const refreshTramites = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+const handleVerSeguimiento = (tramite) => {
+  selectedDocumentoId.value = tramite.documentos_id;
+  isSeguimientoModalVisible.value = true;
 };
 
 // --- 👇 LÓGICA NUEVA 👇 ---

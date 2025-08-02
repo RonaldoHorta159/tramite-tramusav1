@@ -3,10 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\Documento;
+use App\Models\Seguimiento;
 use Illuminate\Http\Request;
 
 class DocumentoController extends Controller
 {
+
+    public function historial(Documento $documento)
+    {
+        // Buscamos todos los seguimientos asociados a este ID de documento
+        // y los ordenamos por fecha para mostrar la secuencia correcta.
+        $historial = Seguimiento::where('documentos_id', $documento->id)->with('oficinaOrigen', 'oficinaDestino')->orderBy('created_at', 'asc')->get();
+
+        return response()->json($historial);
+    }
     /**
      * Display a listing of the resource.
      */
