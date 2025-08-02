@@ -58,4 +58,12 @@ export const seguimientoService = {
     )
     return response.data
   },
+  /**
+   * Anula un trámite.
+   * @param {number} tramiteId - El ID del seguimiento a anular.
+   */
+  async anularTramite(tramiteId) {
+    const response = await backendApi.patch(`/v1/auth/seguimientos/${tramiteId}/anular`)
+    return response.data
+  },
 }

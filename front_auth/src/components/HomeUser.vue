@@ -6,6 +6,8 @@ import Button from 'primevue/button'
 import Avatar from 'primevue/avatar'
 import Menu from 'primevue/menu'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/home/store/authStore'
+
 
 const toast = useToast()
 const user = ref<{ name?: string; avatar?: string } | null>(null)
@@ -20,6 +22,12 @@ const logout = async () => {
     localStorage.clear()
     window.location.href = '/'
   }
+}
+
+const authStore = useAuthStore();
+const handleLogout = () => {
+  authStore.logout();
+  router.push('/');
 }
 
 const userMenuItems = [

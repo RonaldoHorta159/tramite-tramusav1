@@ -21,6 +21,7 @@ Route::prefix('v1')->group(function () {
 
             Route::resource('seguimientos', SeguimientoController::class);
             Route::post('seguimientos/{seguimiento}/derivar', [SeguimientoController::class, 'derivar']);
+            Route::patch('seguimientos/{seguimiento}/anular', [SeguimientoController::class, 'anular']);
 
             Route::resource('oficinas', OficinaController::class); // <-- AÑADE ESTA LÍNEA
             Route::get('documentos/{documento}/historial', [DocumentoController::class, 'historial']);

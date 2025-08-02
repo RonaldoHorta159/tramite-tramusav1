@@ -1,5 +1,9 @@
 <script setup>
 import { ref } from 'vue';
+import { useConfirm } from "primevue/useconfirm"; // <-- Para confirmación
+import { useToast } from "primevue/usetoast";     // <-- Para notificaciones
+import { useAuthStore } from '@/store/authStore'; // <-- Nuestra tienda de autenticación
+import { seguimientoService } from '@/services/seguimientoService';
 import { FilterMatchMode } from '@primevue/core/api';
 import Button from 'primevue/button';
 import Toolbar from 'primevue/toolbar';
@@ -9,7 +13,10 @@ import InputText from 'primevue/inputtext';
 import Column from 'primevue/column';
 import DataTable from 'primevue/datatable';
 
-const emit = defineEmits(['open-new-modal']);
+const emit = defineEmits(['open-new-modal', 'ver-seguimiento', 'derivar-tramite', 'tramite-actualizado']);
+const confirm = useConfirm();
+const toast = useToast();
+const authStore = useAuthStore();
 
 const props = defineProps({
   customers: {
@@ -42,16 +49,33 @@ const verPdf = (pdfUrl) => {
 };
 
 const openNew = () => emit('open-new-modal');
+const verSeguimiento = (tramite) => emit('ver-seguimiento', tramite);
+const derivarTramite = (tramite) => emit('derivar-tramite', tramite);
 
-// Funciones placeholder para las acciones
-const verSeguimiento = (tramite) => console.log('Ver Seguimiento:', tramite);
-const derivarTramite = (tramite) => console.log('Derivar:', tramite);
-const anularTramite = (tramite) => console.log('Anular:', tramite);
-
+const anularTramite = (tramite) => {
+  confirm.require({
+    message: `¿Estás seguro de que quieres anular el trámite ${tramite.CU}? Esta acción no se puede deshacer.`,
+    header: 'Confirmación de Anulación',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Sí, anular',
+    rejectLabel: 'Cancelar',
+    accept: async () => {
+      try {
+        const response = await seguimientoService.anularTramite(tramite.id);
+        toast.add({ severity: 'success', summary: 'Éxito', detail: response.message, life: 3000 });
+        emit('tramite-actualizado'); // Avisa al padre para que refresque la tabla
+      } catch (error) {
+        const errorMessage = error.response?.data?.message || 'Ocurrió un error al anular.';
+        toast.add({ severity: 'error', summary: 'Error', detail: errorMessage, life: 5000 });
+      }
+    }
+  });
+};
 </script>
 
 <template>
   <div>
+    <ConfirmDialog></ConfirmDialog>
     <Toolbar class="mb-4">
       <template #start>
         <Button label="Nuevo Trámite" icon="pi pi-plus" class="p-button-success" @click="openNew" />
@@ -83,8 +107,8 @@ const anularTramite = (tramite) => console.log('Anular:', tramite);
               v-tooltip.top="'Ver Seguimiento'" />
             <Button icon="pi pi-send" class="p-button-rounded p-button-success" @click="derivarTramite(data)"
               v-tooltip.top="'Derivar'" />
-            <Button icon="pi pi-trash" class="p-button-rounded p-button-danger" @click="anularTramite(data)"
-              v-tooltip.top="'Anular'" />
+            <Button v-if="authStore.isAdmin" icon="pi pi-trash" class="p-button-rounded p-button-danger"
+              @click="anularTramite(data)" v-tooltip.top="'Anular'" />
           </div>
         </template>
       </Column>

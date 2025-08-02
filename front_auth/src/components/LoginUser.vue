@@ -1,5 +1,5 @@
 <!-- loginUser.vue -->
-<script setup lang="ts">
+<script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
@@ -12,6 +12,7 @@ import FloatLabel from 'primevue/floatlabel'
 
 import heroImage from '../assets/images/fondo-login.webp'
 import logo from '../assets/images/logo-tramusa.png'
+import { useAuthStore } from '@/home/store/authStore'
 
 const identifier = ref('')
 const password = ref('')
@@ -23,6 +24,11 @@ const toast = useToast()
 const router = useRouter()
 
 const loginUrl = import.meta.env.VITE_API_AUTH_URL + '/v1/auth/login'
+
+const authStore = useAuthStore();
+
+authStore.setToken(response.data.token);
+authStore.setUser(response.data.user);
 
 const login = async () => {
   isLoading.value = true
@@ -39,7 +45,7 @@ const login = async () => {
 
     router.push('/home')
   }
-  catch (err: any) {
+  catch (err) {
     const msg = err.response?.data.error || err.message || 'Error de conexión'
 
     toast.add({

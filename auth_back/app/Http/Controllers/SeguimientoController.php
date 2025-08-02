@@ -142,38 +142,6 @@ class SeguimientoController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(Seguimiento $seguimiento)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Seguimiento $seguimiento)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Seguimiento $seguimiento)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Seguimiento $seguimiento)
-    {
-        //
-    }
-
-    /**
      * Cambia el estado de un trámite a "Recibido".
      *
      * @param  \App\Models\Seguimiento  $seguimiento
@@ -258,5 +226,37 @@ class SeguimientoController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+
+    /**
+     * Anula un trámite, cambiando su estado a "Anulado".
+     * Solo para administradores.
+     *
+     * @param  \App\Models\Seguimiento  $seguimiento
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function anular(Seguimiento $seguimiento)
+    {
+        // 1. (SEGURIDAD) Validar que el usuario sea administrador.
+        //    Asumimos que en tu tabla 'users' tienes una columna 'rol' y el valor es 'admin'.
+        if (auth()->user()->rol !== 'admin') {
+            return response()->json(['message' => 'Acción no autorizada.'], 403); // 403 Forbidden
+        }
+
+        // 2. (LÓGICA) Validar que el trámite no esté ya anulado para evitar acciones redundantes.
+        if ($seguimiento->estado === 'Anulado') {
+            return response()->json(['message' => 'Este trámite ya ha sido anulado.'], 409); // 409 Conflict
+        }
+
+        // 3. Actualizar el estado del trámite
+        $seguimiento->estado = 'Anulado';
+        $seguimiento->save();
+
+        // 4. Devolver un mensaje de éxito
+        return response()->json([
+            'message' => 'Trámite ' . $seguimiento->CU . ' ha sido anulado con éxito.',
+            'data' => $seguimiento
+        ]);
     }
 }
