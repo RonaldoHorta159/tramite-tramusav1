@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import { useConfirm } from "primevue/useconfirm"; // <-- Para confirmación
 import { useToast } from "primevue/usetoast";     // <-- Para notificaciones
-import { useAuthStore } from '@/store/authStore'; // <-- Nuestra tienda de autenticación
+import { useAuthStore } from '@/home/store/authStore' // <-- Nuestra tienda de autenticación
 import { seguimientoService } from '@/services/seguimientoService';
 import { FilterMatchMode } from '@primevue/core/api';
 import Button from 'primevue/button';

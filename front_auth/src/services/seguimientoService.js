@@ -10,11 +10,11 @@ export const seguimientoService = {
    */
   async fetchSeguimientos() {
     try {
-      const response = await backendApi.get('/v1/auth/seguimientos')
+      // CAMBIO AQUÍ: Se eliminó /v1/auth
+      const response = await backendApi.get('/seguimientos')
       return response.data
     } catch (error) {
       console.error('Error en fetchSeguimientos:', error)
-      // Retornamos un array vacío o lanzamos el error para que el componente lo maneje
       return []
     }
   },
@@ -23,7 +23,8 @@ export const seguimientoService = {
    */
   async fetchSeguimientosPorRecibir() {
     try {
-      const response = await backendApi.get('/v1/auth/seguimientos/por-recibir')
+      // CAMBIO AQUÍ: Se eliminó /v1/auth
+      const response = await backendApi.get('/seguimientos/por-recibir')
       return response.data
     } catch (error) {
       console.error('Error en fetchSeguimientosPorRecibir:', error)
@@ -35,7 +36,8 @@ export const seguimientoService = {
    * @param {number} tramiteId - El ID del seguimiento a recibir.
    */
   async recibirTramite(tramiteId) {
-    const response = await backendApi.patch(`/v1/auth/seguimientos/${tramiteId}/recibir`)
+    // CAMBIO AQUÍ: Se eliminó /v1/auth
+    const response = await backendApi.patch(`/seguimientos/${tramiteId}/recibir`)
     return response.data
   },
   /**
@@ -43,7 +45,8 @@ export const seguimientoService = {
    * @param {number} documentoId
    */
   async fetchHistorial(documentoId) {
-    const response = await backendApi.get(`/v1/auth/documentos/${documentoId}/historial`)
+    // CAMBIO AQUÍ: Se eliminó /v1/auth
+    const response = await backendApi.get(`/documentos/${documentoId}/historial`)
     return response.data
   },
   /**
@@ -52,10 +55,8 @@ export const seguimientoService = {
    * @param {object} derivacionData - Los datos para la derivación ({ oficinas_destino, proveido }).
    */
   async derivarTramite(tramiteId, derivacionData) {
-    const response = await backendApi.post(
-      `/v1/auth/seguimientos/${tramiteId}/derivar`,
-      derivacionData,
-    )
+    // CAMBIO AQUÍ: Se eliminó /v1/auth
+    const response = await backendApi.post(`/seguimientos/${tramiteId}/derivar`, derivacionData)
     return response.data
   },
   /**
@@ -63,12 +64,23 @@ export const seguimientoService = {
    * @param {number} tramiteId - El ID del seguimiento a anular.
    */
   async anularTramite(tramiteId) {
-    const response = await backendApi.patch(`/v1/auth/seguimientos/${tramiteId}/anular`)
+    // CAMBIO AQUÍ: Se eliminó /v1/auth
+    const response = await backendApi.patch(`/seguimientos/${tramiteId}/anular`)
     return response.data
   },
 
   async observarTramite(tramiteId, data) {
-    const response = await backendApi.patch(`/v1/auth/seguimientos/${tramiteId}/observar`, data)
+    // CAMBIO AQUÍ: Se eliminó /v1/auth
+    const response = await backendApi.patch(`/seguimientos/${tramiteId}/observar`, data)
+    return response.data
+  },
+  /**
+   * Obtiene la lista de oficinas.
+   * @returns {Promise<Array>} Una promesa que resuelve a un array de oficinas.
+   */
+  async fetchOficinas() {
+    // CAMBIO AQUÍ: Se eliminó /v1/auth
+    const response = await backendApi.get('/oficinas')
     return response.data
   },
 }

@@ -27,9 +27,6 @@ const loginUrl = import.meta.env.VITE_API_AUTH_URL + '/v1/auth/login'
 
 const authStore = useAuthStore();
 
-authStore.setToken(response.data.token);
-authStore.setUser(response.data.user);
-
 const login = async () => {
   isLoading.value = true
 

@@ -21,6 +21,10 @@ import ToastService from 'primevue/toastservice'
 import Toast from 'primevue/toast'
 import Tooltip from 'primevue/tooltip'
 
+// PrimeVue ConfirmDialog
+import ConfirmDialog from 'primevue/confirmdialog'
+import ConfirmationService from 'primevue/confirmationservice' // <-- AÑADE ESTA LÍNEA
+
 // Define un preset personalizado basado en Aura con color primario slate y botones más oscuros
 const MyPreset = definePreset(Aura, {
   semantic: {
@@ -68,7 +72,15 @@ app.use(ToastService)
 // Y registra el componente global de Toast
 app.component('Toast', Toast)
 
+// Registra Pinia y PrimeVue, y el servicio de confirmación de PrimeVue
 app.use(createPinia())
+app.use(ConfirmationService)
+app.component('ConfirmDialog', ConfirmDialog)
+app.use(ConfirmationService)
+
 app.use(router)
+app.use(PrimeVue, { ripple: true })
+app.use(ConfirmationService) // <-- AÑADE ESTA LÍNEA
+app.use(ToastService)
 
 app.mount('#app')

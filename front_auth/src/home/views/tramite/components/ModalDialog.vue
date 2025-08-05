@@ -1,5 +1,8 @@
 <script setup>
-import { ref, defineProps, defineEmits } from 'vue';
+// --- PASO 1: Importaciones corregidas ---
+import { ref } from 'vue';
+import { useConfirm } from "primevue/useconfirm";
+import { useToast } from 'primevue/usetoast';
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog';
 import Select from 'primevue/select';
@@ -9,7 +12,9 @@ import Textarea from 'primevue/textarea';
 import FileUpload from 'primevue/fileupload';
 
 
-// --- 1. Define las props y los emits ---
+const confirm = useConfirm()
+const toast = useToast()
+
 const props = defineProps({
   visible: {
     type: Boolean,
@@ -18,9 +23,31 @@ const props = defineProps({
 });
 const emit = defineEmits(['update:visible', 'tramite-creado']);
 
-// --- 2. Función para cerrar el modal ---
 const closeModal = () => {
   emit('update:visible', false);
+};
+
+// --- PASO 2: Función de envío ---
+const enviarTramite = () => {
+  toast.add({ severity: 'success', summary: 'Confirmado', detail: 'El trámite ha sido enviado.', life: 3000 });
+  closeModal(); // Cierra el modal principal después de enviar
+};
+
+// --- PASO 3: Función de confirmación ---
+const confirmarEnvio = () => {
+  confirm.require({
+    message: '¿Está seguro de que desea enviar este trámite?',
+    header: 'Confirmación',
+    icon: 'pi pi-info-circle',
+    acceptLabel: 'Sí, enviar',
+    rejectLabel: 'Cancelar',
+    accept: () => {
+      enviarTramite();
+    },
+    reject: () => {
+      toast.add({ severity: 'info', summary: 'Cancelado', detail: 'Envío cancelado', life: 3000 });
+    }
+  });
 };
 
 </script>
@@ -92,7 +119,7 @@ const closeModal = () => {
     </div>
     <div class="flex justify-end gap-2 mt-4">
       <Button type="button" label="Cancelar" severity="secondary" @click="closeModal" />
-      <Button type="button" label="Enviar" />
+      <Button type="button" label="Enviar" @click="confirmarEnvio" />
     </div>
   </Dialog>
 </template>

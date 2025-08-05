@@ -291,4 +291,30 @@ class SeguimientoController extends Controller
             'data' => $seguimiento
         ]);
     }
+
+
+    /**
+     * Cambia el estado de un trámite a "Rechazado".
+     *
+     * @param  \App\Models\Seguimiento  $seguimiento
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function rechazar(Seguimiento $seguimiento)
+    {
+        // 1. (Seguridad) Validar que el usuario pertenece a la oficina de destino del trámite
+        $usuario = auth()->user();
+        if ($usuario->oficina_id !== $seguimiento->oficinas_destino) {
+            return response()->json(['message' => 'No autorizado para rechazar este trámite.'], 403);
+        }
+
+        // 2. Actualizar el estado del trámite
+        $seguimiento->estado = 'Rechazado';
+        $seguimiento->save();
+
+        // 3. Devolver un mensaje de éxito
+        return response()->json([
+            'message' => 'Trámite ' . $seguimiento->CU . ' ha sido rechazado.',
+            'data' => $seguimiento
+        ]);
+    }
 }
