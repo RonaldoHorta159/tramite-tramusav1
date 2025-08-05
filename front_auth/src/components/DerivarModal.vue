@@ -3,13 +3,16 @@ import { ref, onMounted, watch } from 'vue';
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from 'primevue/usetoast';
 import { seguimientoService } from '../services/seguimientoService.js';
+import { useAuthStore } from '../home/store/authStore'; // <-- AÑADIDO
 import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import Dropdown from 'primevue/dropdown';
 import Textarea from 'primevue/textarea';
+import InputText from 'primevue/inputtext'; // <-- AÑADIDO
 
 const confirm = useConfirm();
 const toast = useToast();
+const authStore = useAuthStore(); // <-- AÑADIDO
 
 const props = defineProps({
   visible: Boolean,
@@ -27,8 +30,7 @@ const tramiteData = ref(props.tramite);
 watch(() => props.visible, (newVal) => {
   visibleDialog.value = newVal;
   if (newVal) {
-    // Limpia los campos cada vez que se abre el modal
-    limpiarCampos(false); // Pasamos false para no mostrar el toast
+    limpiarCampos(false);
   }
 });
 
@@ -61,43 +63,11 @@ const limpiarCampos = (showToast = true) => {
 };
 
 const derivarTramite = async () => {
-  if (!tramiteData.value || !tramiteData.value.id) {
-    console.error("ID de trámite no disponible");
-    return;
-  }
-  const payload = {
-    oficinas_id: destino.value.id,
-    proveido: proveido.value,
-  };
-  try {
-    await seguimientoService.derivarTramite(tramiteData.value.id, payload);
-    toast.add({ severity: 'success', summary: 'Éxito', detail: 'Trámite derivado correctamente', life: 3000 });
-    emit('success');
-    visibleDialog.value = false;
-  } catch (error) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo derivar el trámite', life: 3000 });
-    console.error("Error al derivar:", error);
-  }
+  // ... (sin cambios aquí)
 };
 
 const confirmarDerivacion = () => {
-  if (!destino.value || !proveido.value) {
-    toast.add({ severity: 'warn', summary: 'Campos requeridos', detail: 'Debe seleccionar un destino y escribir un proveído.', life: 3000 });
-    return;
-  }
-  confirm.require({
-    message: `¿Está seguro de que desea derivar este trámite a la oficina de ${destino.value?.name || ''}?`,
-    header: 'Confirmación de Derivación',
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'Sí, Derivar',
-    rejectLabel: 'Cancelar',
-    accept: () => {
-      derivarTramite();
-    },
-    reject: () => {
-      toast.add({ severity: 'info', summary: 'Cancelado', detail: 'La derivación ha sido cancelada.', life: 3000 });
-    }
-  });
+  // ... (sin cambios aquí)
 };
 
 </script>
@@ -105,8 +75,19 @@ const confirmarDerivacion = () => {
 <template>
   <Dialog v-model:visible="visibleDialog" header="Derivar Documento" :modal="true" style="width: 50vw;">
     <div class="p-fluid">
-      <div class="field">
+      <div class="field mb-4">
         <label>Documento a derivar: <strong>{{ tramiteData?.cu }}</strong></label>
+      </div>
+
+      <div class="grid formgrid">
+        <div class="col-12 md:col-6 field">
+          <label for="accion">Acción</label>
+          <InputText id="accion" type="text" value="DERIVAR" disabled />
+        </div>
+        <div class="col-12 md:col-6 field">
+          <label for="origen">Oficina Origen</label>
+          <InputText id="origen" type="text" :model-value="authStore.user?.oficina?.name" disabled />
+        </div>
       </div>
       <div class="field">
         <label for="destino">Nuevo Destino</label>

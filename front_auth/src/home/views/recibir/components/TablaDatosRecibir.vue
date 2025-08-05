@@ -14,9 +14,6 @@ const props = defineProps({
   },
 });
 
-// 1. ELIMINAMOS LA LÓGICA DE RECEPCIÓN INDIVIDUAL
-// const recibirTramite = ... (BORRAR ESTA FUNCIÓN)
-// const confirmRecibir = ... (BORRAR ESTA FUNCIÓN)
 
 // 2. DEFINIMOS EL EMIT PARA COMUNICARNOS CON EL PADRE
 const emit = defineEmits(['reload', 'abrir-recepcionar']);

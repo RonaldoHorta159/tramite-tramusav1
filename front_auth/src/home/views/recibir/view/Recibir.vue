@@ -34,10 +34,9 @@ const abrirModalRecepcion = () => {
 
 onMounted(fetchData);
 </script>
-
 <template>
   <div class="card">
-    <TablaDatosRecibir :seguimientos="seguimientos" :loading="isLoading" @reload="fetchData"
+    <TablaDatosRecibir :tramites="seguimientos" :loading="isLoading" @reload="fetchData"
       @abrir-recepcionar="abrirModalRecepcion" />
 
     <RecepcionarModal v-model:visible="recepcionarModalVisible" :tramites="seguimientos" @success="fetchData" />
