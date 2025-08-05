@@ -317,4 +317,35 @@ class SeguimientoController extends Controller
             'data' => $seguimiento
         ]);
     }
+
+    /**
+     * Recibe múltiples trámites en lote.
+     */
+    public function recibirLote(Request $request)
+    {
+        // Validamos que recibimos un array de IDs
+        $validated = $request->validate([
+            'seguimiento_ids' => 'required|array',
+            'seguimiento_ids.*' => 'exists:seguimientos,id', // Valida que cada ID exista
+        ]);
+
+        $userOficinaId = auth()->user()->oficina_id;
+
+        // Usamos una transacción para asegurar la integridad de los datos
+        DB::transaction(function () use ($validated, $userOficinaId) {
+            foreach ($validated['seguimiento_ids'] as $seguimientoId) {
+                $seguimiento = Seguimiento::findOrFail($seguimientoId);
+
+                // Verificación de seguridad: el trámite debe estar destinado a la oficina del usuario
+                if ($seguimiento->destino_id !== $userOficinaId || $seguimiento->estado !== 'PENDIENTE') {
+                    // Si un trámite no cumple, abortamos toda la transacción
+                    abort(403, "No autorizado para recibir el trámite ID: " . $seguimientoId);
+                }
+
+                $seguimiento->update(['estado' => 'RECIBIDO']);
+            }
+        });
+
+        return response()->json(['message' => 'Trámites recibidos correctamente.'], 200);
+    }
 }

@@ -24,8 +24,9 @@ Route::prefix('v1')->group(function () {
             Route::patch('seguimientos/{seguimiento}/anular', [SeguimientoController::class, 'anular']);
             Route::patch('seguimientos/{seguimiento}/observar', [SeguimientoController::class, 'observar']);
             Route::patch('seguimientos/{seguimiento}/rechazar', [SeguimientoController::class, 'rechazar']);
+            Route::post('/seguimientos/recibir-lote', [App\Http\Controllers\SeguimientoController::class, 'recibirLote']);
 
-            Route::resource('oficinas', OficinaController::class); // <-- AÑADE ESTA LÍNEA
+            Route::resource('oficinas', OficinaController::class);
             Route::get('documentos/{documento}/historial', [DocumentoController::class, 'historial']);
         });
 

@@ -75,6 +75,16 @@ export const seguimientoService = {
     return response.data
   },
   /**
+   * Recibe una lista de trámites en lote.
+   * @param {Array<number>} seguimientoIds - Un array con los IDs de los seguimientos a recibir.
+   */
+  async recibirTramitesEnLote(seguimientoIds) {
+    // La data que enviamos debe coincidir con lo que espera el backend
+    const payload = { seguimiento_ids: seguimientoIds }
+    const response = await backendApi.post('/seguimientos/recibir-lote', payload)
+    return response.data
+  },
+  /**
    * Obtiene la lista de oficinas.
    * @returns {Promise<Array>} Una promesa que resuelve a un array de oficinas.
    */

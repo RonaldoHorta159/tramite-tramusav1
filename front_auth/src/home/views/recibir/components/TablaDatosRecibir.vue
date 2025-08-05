@@ -14,7 +14,19 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['recibir-tramite', 'observar-tramite', 'rechazar-tramite', 'ver-seguimiento']);
+// 1. ELIMINAMOS LA LÓGICA DE RECEPCIÓN INDIVIDUAL
+// const recibirTramite = ... (BORRAR ESTA FUNCIÓN)
+// const confirmRecibir = ... (BORRAR ESTA FUNCIÓN)
+
+// 2. DEFINIMOS EL EMIT PARA COMUNICARNOS CON EL PADRE
+const emit = defineEmits(['reload', 'abrir-recepcionar']);
+
+const abrirModal = () => {
+  emit('abrir-recepcionar');
+};
+
+const abrirSeguimiento = (data) => emit('ver-seguimiento', data);
+const abrirObservar = (data) => emit('observar-tramite', data);
 
 const formatDate = (value) => {
   if (!value) return '';
@@ -32,39 +44,36 @@ const verPdf = (pdfUrl) => {
 };
 
 // Funciones que emiten eventos al componente padre
-const recibirTramite = (tramite) => emit('recibir-tramite', tramite);
-const observarTramite = (tramite) => emit('observar-tramite', tramite);
 const rechazarTramite = (tramite) => emit('rechazar-tramite', tramite);
-// Nueva función para emitir el evento ver-seguimiento
-const verSeguimiento = (tramite) => {
-  emit('ver-seguimiento', tramite);
-};
 </script>
 
 <template>
   <div>
     <DataTable :value="props.tramites" :loading="props.loading" paginator :rows="10" dataKey="id" showGridlines
       responsiveLayout="scroll" class="p-datatable-sm">
+      <template #header>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <span class="text-xl text-900 font-bold">Bandeja de Entrada</span>
+          <div>
+            <Button label="Recepcionar" icon="pi pi-inbox" class="mr-2" @click="abrirModal" />
+            <Button icon="pi pi-refresh" rounded raised @click="$emit('reload')" />
+          </div>
+        </div>
+      </template>
 
       <template #empty> No hay trámites pendientes por recibir. </template>
       <template #loading> Cargando trámites, por favor espere... </template>
 
       <Column field="CU" header="Código Único" sortable />
-
       <Column field="estado" header="Estado" sortable />
 
-      <Column header="Opciones" style="min-width: 10rem; text-align: center;">
-        <template #body="{ data }">
-          <div class="flex gap-2 justify-center">
-            <Button icon="pi pi-inbox" class="p-button-rounded p-button-success" @click="recibirTramite(data)"
-              v-tooltip.top="'Recibir Trámite'" />
-            <Button icon="pi pi-comments" class="p-button-rounded p-button-warning" @click="observarTramite(data)"
-              v-tooltip.top="'Observar'" />
-            <Button icon="pi pi-times-circle" class="p-button-rounded p-button-danger" @click="rechazarTramite(data)"
-              v-tooltip.top="'Rechazar'" />
-            <Button icon="pi pi-eye" class="p-button-rounded p-button-info" @click="verSeguimiento(data)"
-              v-tooltip.top="'Ver seguimiento'" />
-          </div>
+      <Column header="Opciones" :exportable="false" style="min-width:8rem">
+        <template #body="slotProps">
+          <Button icon="pi pi-eye" outlined rounded class="mr-2" @click="abrirSeguimiento(slotProps.data)" />
+          <Button icon="pi pi-pencil" outlined rounded severity="warning" class="mr-2"
+            @click="abrirObservar(slotProps.data)" />
+          <Button icon="pi pi-times-circle" class="p-button-rounded p-button-danger"
+            @click="rechazarTramite(slotProps.data)" v-tooltip.top="'Rechazar'" />
         </template>
       </Column>
 
@@ -97,7 +106,6 @@ const verSeguimiento = (tramite) => {
           {{ data.proveido || 'N/A' }}
         </template>
       </Column>
-
     </DataTable>
   </div>
 </template>
