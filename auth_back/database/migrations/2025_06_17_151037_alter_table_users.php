@@ -12,7 +12,6 @@ return new class extends Migration {
     {
         Schema::table('users', function (Blueprint $table) {
             // 1) Añadir DNI único
-            $table->string('dni')->unique()->after('email');
 
             // 2) Añadir estado (smallint, default=1)
             $table->smallInteger('estado')->default(1)->after('password');
