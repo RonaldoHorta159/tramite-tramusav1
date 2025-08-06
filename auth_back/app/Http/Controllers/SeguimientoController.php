@@ -45,17 +45,18 @@ class SeguimientoController extends Controller
      */
     public function store(Request $request)
     {
-        // 1. Validación de los datos
+        // 1. Validación
         $validatedData = $request->validate([
             'asunto' => 'required|string|max:255',
             'oficinas_destino' => 'required|exists:oficinas,id',
             'tipo_documento' => 'required|string|max:50',
+            'numero_documento' => 'required|string|max:50',
             'numero_folios' => 'required|integer|min:1',
-            'file_archivo' => 'nullable|file|mimes:pdf|max:2048', // PDF de máx 2MB
+            'pdf' => 'nullable|file|mimes:pdf|max:2048',
         ]);
 
         try {
-            // 2. Usamos una transacción para garantizar la integridad de los datos
+            // 2. Transacción
             $seguimiento = DB::transaction(function () use ($validatedData, $request) {
                 $usuario = auth()->user();
 
@@ -63,53 +64,45 @@ class SeguimientoController extends Controller
                     throw new \Exception('El usuario no tiene una oficina de origen asignada.');
                 }
 
-                // --- Creación del Documento ---
-                $documento = new Documento();
-                $documento->numero_documento = 0; // Se puede autogenerar o quitar si no es necesario
-                $documento->dni = $usuario->dni;
-                $documento->nombre = $usuario->name;
-                $documento->tipo_documento = $validatedData['tipo_documento'];
-                $documento->fecha_emision = now();
-                $documento->numero_folios = $validatedData['numero_folios'];
-                $documento->pdf_url = null;
-
-                if ($request->hasFile('file_archivo')) {
-                    // Guarda el archivo y obtén la URL pública
-                    $path = $request->file('file_archivo')->store('documentos', 'public');
-                    $documento->pdf_url = \Illuminate\Support\Facades\Storage::url($path);
+                $pdfPath = null;
+                if ($request->hasFile('pdf')) {
+                    $path = $request->file('pdf')->store('documentos', 'public');
+                    $pdfPath = Storage::url($path);
                 }
-                $documento->save();
 
-                // --- Creación del Seguimiento (sin el CU aún) ---
-                $nuevoSeguimiento = new Seguimiento();
-                $nuevoSeguimiento->documentos_id = $documento->id;
-                $nuevoSeguimiento->asunto = $validatedData['asunto'];
-                $nuevoSeguimiento->fecha_seguimiento = now();
-                $nuevoSeguimiento->estado = 'Enviado';
-                $nuevoSeguimiento->oficinas_origen = $usuario->oficina_id;
-                $nuevoSeguimiento->oficinas_destino = $validatedData['oficinas_destino'];
-                $nuevoSeguimiento->save(); // Guardamos para obtener el ID
+                // 3. Creación del Documento (usando los campos correctos)
+                $documento = Documento::create([
+                    'numero_documento' => $validatedData['numero_documento'],
+                    'tipo_documento' => $validatedData['tipo_documento'],
+                    'numero_folios' => $validatedData['numero_folios'],
+                    'pdf_url' => $pdfPath,
+                ]);
 
-                // --- Generación y guardado del Código Único (CU) ---
+                // 4. Creación del Seguimiento (usando los nombres de columna estándar de Laravel)
+                $nuevoSeguimiento = Seguimiento::create([
+                    'documento_id' => $documento->id,
+                    'asunto' => $validatedData['asunto'],
+                    'estado' => 'PENDIENTE',
+                    'origen_id' => $usuario->oficina_id,
+                    'destino_id' => $validatedData['oficinas_destino'],
+                ]);
+
+                // 5. Generación y guardado del Código Único (CU)
                 $cu_number = str_pad($nuevoSeguimiento->id, 7, '0', STR_PAD_LEFT);
-                $cu_code = "CU-" . $nuevoSeguimiento->oficinas_origen . "-" . $cu_number;
-                $nuevoSeguimiento->CU = $cu_code;
-                $nuevoSeguimiento->save(); // Actualizamos con el CU
+                $cu_code = "CU-" . $nuevoSeguimiento->origen_id . "-" . $cu_number;
+                $nuevoSeguimiento->update(['CU' => $cu_code]);
 
                 return $nuevoSeguimiento;
             });
 
-            // 3. Devolvemos una respuesta de éxito con el trámite creado
-            return response()->json([
-                'message' => 'Trámite registrado con éxito.',
-                'data' => $seguimiento->load(['documento', 'oficinaOrigen', 'oficinaDestino'])
-            ], 201);
+            // 6. Respuesta de éxito
+            return response()->json(['message' => 'Trámite registrado con éxito.', 'data' => $seguimiento], 201);
 
         } catch (\Exception $e) {
-            // Si algo falla, la transacción se revierte y devolvemos un error
+            // 7. Respuesta de error detallada
             return response()->json([
-                'message' => 'Error al registrar el trámite.',
-                'error' => $e->getMessage()
+                'message' => 'Error interno al registrar el trámite.',
+                'error' => $e->getMessage() // Esto nos dará una pista si vuelve a fallar
             ], 500);
         }
     }
